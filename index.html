@@ -1,0 +1,2022 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SITATIB - Sistem Informasi Tata Tertib SMAYO</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome & Google Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printArea, #printArea * {
+        visibility: visible;
+      }
+      #printArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col transition-colors duration-300">
+
+  <!-- TOP BRANDING BAR -->
+  <header class="bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 text-white shadow-md no-print border-b border-indigo-900/30">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center flex-wrap gap-3">
+      <div class="flex items-center space-x-3">
+        <!-- Logo Image Brand Integration -->
+        <div class="bg-white p-1 rounded-xl shadow-md border border-slate-200/20 flex items-center justify-center">
+          <img src="https://i.ibb.co.com/dX64Q46/Jargon-SMAYO-jatim-1.png" alt="SMAYO Jargon Logo" class="h-9 w-auto object-contain" onerror="this.src='https://placehold.co/100x40?text=SMAYO'">
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">SITATIB</h1>
+          <p class="text-xs text-blue-200">Sistem Informasi Tata Tertib & Poin Pelanggaran</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center space-x-3">
+        <!-- Status Mode Integrasi -->
+        <div id="connectionStatus" class="flex items-center space-x-2 text-xs bg-amber-500/20 text-amber-200 px-3 py-1.5 rounded-full border border-amber-500/30">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span>Mode Demo (Offline)</span>
+        </div>
+        
+        <!-- User Profile Info -->
+        <div id="userProfile" class="hidden flex items-center space-x-3">
+          <div class="text-right">
+            <p id="userName" class="text-sm font-semibold leading-tight"></p>
+            <span id="userRole" class="text-[10px] bg-indigo-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-wide border border-indigo-500"></span>
+          </div>
+          <button onclick="logout()" class="p-2 bg-rose-600/20 hover:bg-rose-600 text-rose-200 hover:text-white rounded-lg transition text-sm" title="Keluar">
+            <i class="fa-solid fa-sign-out-alt"></i>
+          </button>
+        </div>
+        
+        <!-- Login Trigger for demo -->
+        <div id="loginTrigger">
+          <button onclick="openLoginModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-4 py-2 rounded-xl transition shadow flex items-center space-x-2 border border-emerald-500/40">
+            <i class="fa-solid fa-lock text-xs"></i>
+            <span>Masuk Guru</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- NAVIGATION MENUS -->
+  <nav class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm no-print">
+    <div class="max-w-7xl mx-auto px-4 flex space-x-1 overflow-x-auto py-2">
+      <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn px-4 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-xl flex items-center space-x-2 whitespace-nowrap transition">
+        <i class="fa-solid fa-chart-pie"></i>
+        <span>Beranda & Analitik</span>
+      </button>
+      <button onclick="switchTab('aturan')" id="btn-aturan" class="nav-btn px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl flex items-center space-x-2 whitespace-nowrap transition">
+        <i class="fa-solid fa-list-check"></i>
+        <span>Aturan & Skor (70 Jenis)</span>
+      </button>
+      <button onclick="switchTab('siswa')" id="btn-siswa" class="nav-btn hidden px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl flex items-center space-x-2 whitespace-nowrap transition">
+        <i class="fa-solid fa-users"></i>
+        <span>Database Siswa & Poin</span>
+      </button>
+      <button onclick="switchTab('admin')" id="btn-admin" class="nav-btn hidden px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl flex items-center space-x-2 whitespace-nowrap transition">
+        <i class="fa-solid fa-sliders"></i>
+        <span>Pengaturan & Admin</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN AREA -->
+  <main class="flex-grow max-w-7xl w-full mx-auto p-4 no-print">
+
+    <!-- === TAB 1: DASHBOARD & STATISTIK === -->
+    <section id="tab-dashboard" class="tab-content space-y-6">
+      
+      <!-- Periode Aktif Banner -->
+      <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-indigo-900 font-bold text-lg flex items-center gap-2">
+            <i class="fa-solid fa-calendar-day"></i>
+            <span>Tahun Ajaran Aktif: <span id="lblTahunAjaran" class="underline decoration-indigo-400">2026/2027</span></span>
+          </h2>
+          <p class="text-sm text-indigo-700">Periode pemantauan saat ini: <span id="lblSemester" class="font-bold">Semester Ganjil</span>. Semua grafik dan total skor dihitung berdasarkan periode ini.</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="text-xs bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-full font-bold">
+            <i class="fa-solid fa-circle-check mr-1"></i>Sistem Berjalan Lancar
+          </span>
+        </div>
+      </div>
+
+      <!-- KARTU METRIK UTAMA -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="p-3.5 bg-blue-100 text-blue-700 rounded-xl text-xl">
+            <i class="fa-solid fa-user-graduate"></i>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 font-semibold uppercase">Total Siswa Terpantau</p>
+            <h3 id="statTotalSiswa" class="text-2xl font-extrabold text-slate-900">10</h3>
+          </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="p-3.5 bg-rose-100 text-rose-700 rounded-xl text-xl">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 font-semibold uppercase">Siswa dengan Poin Aktif</p>
+            <h3 id="statSiswaMelanggar" class="text-2xl font-extrabold text-rose-600">0</h3>
+          </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="p-3.5 bg-amber-100 text-amber-700 rounded-xl text-xl">
+            <i class="fa-solid fa-calendar-minus"></i>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 font-semibold uppercase">Pelanggaran Hari Ini</p>
+            <h3 id="statPelanggaranHariIni" class="text-2xl font-extrabold text-amber-600">0</h3>
+          </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="p-3.5 bg-emerald-100 text-emerald-700 rounded-xl text-xl">
+            <i class="fa-solid fa-handshake-angle"></i>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 font-semibold uppercase">Aksi Pembinaan</p>
+            <h3 id="statTotalPembinaan" class="text-2xl font-extrabold text-emerald-600">0</h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRAFIK DAN CHART -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Grafik Tren Mingguan -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2">
+          <div class="flex justify-between items-center mb-4">
+            <h4 class="font-bold text-slate-800">Tren Log Pelanggaran Mingguan</h4>
+            <span class="text-xs text-slate-500">Update Real-time</span>
+          </div>
+          <div class="h-64">
+            <canvas id="chartTrenPelanggaran"></canvas>
+          </div>
+        </div>
+        <!-- Grafik Top Kategori -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <h4 class="font-bold text-slate-800 mb-4">Proporsi Kategori Pelanggaran</h4>
+          <div class="h-64 flex items-center justify-center">
+            <canvas id="chartKategoriPelanggaran"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- AKUMULASI POIN TERTINGGI & LOG TERBARU -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Log Terbaru -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+          <h4 class="font-bold text-slate-800 mb-4"><i class="fa-solid fa-history mr-1 text-slate-400"></i> Log Pelanggaran Terkini</h4>
+          <div class="overflow-x-auto flex-grow">
+            <table class="w-full text-left text-sm">
+              <thead>
+                <tr class="border-b border-slate-100 text-slate-500 font-bold text-xs">
+                  <th class="pb-3">Siswa</th>
+                  <th class="pb-3">Pelanggaran</th>
+                  <th class="pb-3 text-center">Poin</th>
+                  <th class="pb-3 text-right">Pencatat</th>
+                </tr>
+              </thead>
+              <tbody id="tblRecentLogs" class="divide-y divide-slate-100">
+                <!-- Diisi otomatis oleh JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Siswa Dengan Poin Tertinggi (Butuh Penanganan Segera) -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+          <h4 class="font-bold text-slate-800 mb-4 text-rose-600"><i class="fa-solid fa-triangle-exclamation mr-1 animate-bounce"></i> Perlu Penanganan Segera (Poin Tertinggi)</h4>
+          <div class="overflow-x-auto flex-grow">
+            <table class="w-full text-left text-sm">
+              <thead>
+                <tr class="border-b border-slate-100 text-slate-500 font-bold text-xs">
+                  <th class="pb-3">Nama Siswa</th>
+                  <th class="pb-3">Kelas</th>
+                  <th class="pb-3 text-center">Akumulasi Poin</th>
+                  <th class="pb-3 text-right">Tindakan BK</th>
+                </tr>
+              </thead>
+              <tbody id="tblTopOffenders" class="divide-y divide-slate-100">
+                <!-- Diisi otomatis oleh JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- === TAB 2: DATA ATURAN (70 JENIS) === -->
+    <section id="tab-aturan" class="tab-content hidden space-y-4">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div>
+            <h3 class="font-bold text-xl text-slate-800">Daftar Aturan & Poin Tata Tertib</h3>
+            <p class="text-sm text-slate-500">Memuat 70 jenis pelanggaran resmi SMAYO berdasarkan dokumen lampiran tata tertib sekolah.</p>
+          </div>
+          <div class="relative w-full md:w-80">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="searchRules" oninput="filterRules()" placeholder="Cari kode atau bunyi pelanggaran..." class="w-full bg-slate-50 border border-slate-200 pl-10 pr-4 py-2.5 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition text-sm">
+          </div>
+        </div>
+
+        <!-- Tabel Aturan -->
+        <div class="overflow-x-auto rounded-xl border border-slate-200">
+          <table class="w-full text-left text-sm border-collapse">
+            <thead>
+              <tr class="border-b border-slate-200 text-slate-600 font-bold bg-slate-50 text-xs">
+                <th class="p-3 w-16">Kode</th>
+                <th class="p-3">Uraian Pelanggaran</th>
+                <th class="p-3 text-center w-24">Skor Poin</th>
+                <th class="p-3">Prosedur / Keterangan Pembinaan</th>
+              </tr>
+            </thead>
+            <tbody id="tblRules" class="divide-y divide-slate-100 bg-white">
+              <!-- Diisi oleh JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- === TAB 3: DATABASE SISWA & POIN === -->
+    <section id="tab-siswa" class="tab-content hidden space-y-4">
+      
+      <!-- Filter & Aksi Siswa -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+          <div class="relative flex-grow">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="searchStudent" oninput="filterStudents()" placeholder="Cari nama atau NISN murid..." class="w-full sm:w-80 bg-slate-50 border border-slate-200 pl-10 pr-4 py-2.5 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition text-sm">
+          </div>
+          <select id="filterClass" onchange="filterStudents()" class="bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition text-sm">
+            <option value="">Semua Kelas</option>
+            <option value="X-1">X-1</option>
+            <option value="X-2">X-2</option>
+            <option value="XI-MIPA-1">XI-MIPA-1</option>
+            <option value="XI-MIPA-2">XI-MIPA-2</option>
+            <option value="XII-IPS-1">XII-IPS-1</option>
+          </select>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="text-xs font-bold bg-indigo-50 text-indigo-700 px-3 py-2 rounded-xl border border-indigo-100">
+            <i class="fa-solid fa-star text-amber-500 mr-1"></i>10 Teratas Seluruh Kelas
+          </span>
+          <!-- QR Scanner Simulation Button -->
+          <button onclick="simulateQRScan()" class="bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-sm">
+            <i class="fa-solid fa-qrcode"></i>
+            <span>Scan Kartu Pelajar</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Grid Siswa -->
+      <div id="studentGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Diisi otomatis oleh JS (Hanya menampilkan 10 Siswa Teratas) -->
+      </div>
+    </section>
+
+    <!-- === TAB 4: PENGATURAN & ADMIN === -->
+    <section id="tab-admin" class="tab-content hidden space-y-6">
+      
+      <!-- Safe Logout Banner for Admin -->
+      <div class="bg-rose-50 border border-rose-100 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="flex items-center space-x-3">
+          <div class="p-2.5 bg-rose-100 text-rose-600 rounded-xl">
+            <i class="fa-solid fa-shield-halved text-lg"></i>
+          </div>
+          <div>
+            <h4 class="font-bold text-rose-900 text-sm">Sesi Admin Aktif</h4>
+            <p class="text-xs text-rose-700">Pastikan keluar dari akun admin setelah selesai mengkonfigurasi sistem.</p>
+          </div>
+        </div>
+        <button onclick="logout()" class="w-full sm:w-auto bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs py-2.5 px-4 rounded-xl transition flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-lock"></i>
+          <span>Keluar Sesi Admin (Logout)</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Form Pengaturan Sekolah (Period Active) -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <h4 class="font-bold text-lg text-slate-800 mb-2"><i class="fa-solid fa-calendar-check mr-1 text-indigo-600"></i> Periode Tahun Ajaran Aktif</h4>
+            <p class="text-xs text-slate-500 mb-4">Penggantian periode di sini akan otomatis me-reset perhitungan poin aktif di dashboard menjadi 0, tetapi riwayat lama tetap aman.</p>
+            
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tahun Ajaran</label>
+                <input type="text" id="adminTahunAjaran" value="2026/2027" class="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Semester</label>
+                <select id="adminSemester" class="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="Ganjil">Semester Ganjil</option>
+                  <option value="Genap">Semester Genap</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <button onclick="saveAdminSettings()" class="w-full mt-6 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold py-3 rounded-xl transition shadow flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-save"></i>
+            <span>Terapkan & Simpan Periode</span>
+          </button>
+        </div>
+
+        <!-- Tambah Pengguna (Guru/Wali Kelas) -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <h4 class="font-bold text-lg text-slate-800 mb-2"><i class="fa-solid fa-user-plus mr-1 text-emerald-600"></i> Daftarkan Guru / Tim Tatib Baru</h4>
+          <p class="text-xs text-slate-500 mb-4">Daftarkan email Google aktif agar mereka bisa masuk ke sistem menggunakan "Masuk dengan Google".</p>
+          
+          <form id="formAddGuru" onsubmit="handleAddGuru(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nama Lengkap</label>
+              <input type="text" id="addGuruNama" required placeholder="Contoh: Drs. Wahyu Saputra" class="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Email Google Aktif</label>
+              <input type="email" id="addGuruEmail" required placeholder="Contoh: wahyu@smayo.sch.id" class="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Hak Akses (Role)</label>
+              <select id="addGuruRole" class="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="Guru Piket">Guru Piket / Guru Mapel (Hanya input)</option>
+                <option value="Tim Tatib">Tim Tatib & BK (Input & Pengurangan Poin)</option>
+                <option value="Admin">Administrator (Kontrol penuh)</option>
+              </select>
+            </div>
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold py-3 rounded-xl transition shadow flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-check-double"></i>
+              <span>Daftarkan Pengguna</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Konfigurasi API Web App GAS -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <h4 class="font-bold text-lg text-slate-800 mb-2"><i class="fa-solid fa-link mr-1 text-amber-600"></i> Hubungkan ke Google Sheets</h4>
+            <p class="text-xs text-slate-500 mb-4">Tempel URL Web App dari hasil deployment Google Apps Script Anda untuk berpindah dari mode simulasi ke database sekolah yang nyata.</p>
+            
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">URL Web App GAS</label>
+              <textarea id="gasUrlInput" rows="3" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+          </div>
+          <button onclick="saveGasConnection()" class="w-full mt-6 bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold py-3 rounded-xl transition shadow flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-plug"></i>
+            <span>Hubungkan Database</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Backup, Import & Export Area -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <h4 class="font-bold text-lg text-slate-800 mb-4"><i class="fa-solid fa-file-excel mr-1 text-emerald-600"></i> Ekspor Data & Rekapitulasi</h4>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col justify-between">
+            <div>
+              <h5 class="font-bold text-sm text-slate-800">Unduh Seluruh Log</h5>
+              <p class="text-xs text-slate-500 mt-1">Mengunduh file Excel/CSV berisi semua riwayat pelanggaran dan pembinaan siswa.</p>
+            </div>
+            <button onclick="exportLogsToCSV()" class="mt-4 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-3 rounded-lg transition self-start flex items-center space-x-2">
+              <i class="fa-solid fa-file-csv"></i>
+              <span>Unduh CSV Log</span>
+            </button>
+          </div>
+          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col justify-between">
+            <div>
+              <h5 class="font-bold text-sm text-slate-800">Unduh Rekap Siswa</h5>
+              <p class="text-xs text-slate-500 mt-1">Rekap nama siswa berserta akumulasi poin aktif dan status bimbingan saat ini.</p>
+            </div>
+            <button onclick="exportStudentsToCSV()" class="mt-4 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-3 rounded-lg transition self-start flex items-center space-x-2">
+              <i class="fa-solid fa-file-csv"></i>
+              <span>Unduh CSV Siswa</span>
+            </button>
+          </div>
+          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col justify-between">
+            <div>
+              <h5 class="font-bold text-sm text-slate-800">Pemutihan Poin Massal</h5>
+              <p class="text-xs text-rose-500 mt-1 font-semibold"><i class="fa-solid fa-circle-exclamation mr-1 animate-pulse"></i> Tindakan Berbahaya!</p>
+              <p class="text-xs text-slate-500">Mereset paksa poin aktif seluruh siswa menjadi nol tanpa mengubah periode semester.</p>
+            </div>
+            <button onclick="triggerMassalReset()" class="mt-4 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2 px-3 rounded-lg transition self-start flex items-center space-x-2">
+              <i class="fa-solid fa-trash-can"></i>
+              <span>Reset Poin Sekarang</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- === FOOTER WATERMARK === -->
+  <footer class="bg-white border-t border-slate-200 py-4 mt-auto no-print">
+    <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-400">
+      <p>SITATIB App - Versi Web Mandiri 1.0 <span class="mx-1.5">|</span> Tim IT Manajemen SMAYO @2026</p>
+    </div>
+  </footer>
+
+  <!-- ==================== MODAL DIALOGS ==================== -->
+
+  <!-- MODAL: LOGIN SIMULATION -->
+  <div id="loginModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative border border-slate-100">
+      <button onclick="closeLoginModal()" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600 text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="text-center mb-6">
+        <div class="inline-flex p-3 bg-indigo-50 text-indigo-600 rounded-2xl text-2xl mb-3">
+          <i class="fa-solid fa-user-lock"></i>
+        </div>
+        <h4 class="font-bold text-lg text-slate-800">Masuk ke Sistem SITATIB</h4>
+        <p class="text-xs text-slate-500 mt-1">Gunakan email Google aktif yang sudah didaftarkan oleh admin.</p>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Email Google Anda</label>
+          <input type="email" id="loginEmail" placeholder="nama@smayo.sch.id" class="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        
+        <button onclick="handleLoginSubmit()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition shadow flex items-center justify-center space-x-2">
+          <i class="fa-brands fa-google"></i>
+          <span>Masuk Sekarang</span>
+        </button>
+
+        <div class="relative flex py-2 items-center">
+          <div class="flex-grow border-t border-slate-100"></div>
+          <span class="flex-shrink mx-3 text-[10px] text-slate-400 font-bold uppercase">Coba Cepat (Mode Demo)</span>
+          <div class="flex-grow border-t border-slate-100"></div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="quickLogin('Admin')" class="py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition border border-slate-200">Admin</button>
+          <button onclick="quickLogin('Tim Tatib')" class="py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition border border-slate-200">Tatib & BK</button>
+          <button onclick="quickLogin('Guru Piket')" class="py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition border border-slate-200">Guru</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DETAIL SISWA & RIWAYAT (DI SINI JUGA UNTUK INPUT PELANGGARAN) -->
+  <div id="studentDetailModal" class="hidden fixed inset-0 z-40 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-4xl w-full p-6 shadow-2xl relative border border-slate-100 max-h-[90vh] overflow-y-auto">
+      <button onclick="closeStudentDetail()" class="absolute right-6 top-6 text-slate-400 hover:text-slate-600 text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="flex flex-col md:flex-row gap-6 mb-6 pb-6 border-b border-slate-100">
+        <!-- Profil Ringkas -->
+        <div class="flex items-center space-x-4">
+          <div class="w-16 h-16 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-2xl font-black">
+            <span id="detInisial"></span>
+          </div>
+          <div>
+            <h4 id="detNama" class="font-bold text-xl text-slate-800"></h4>
+            <p class="text-sm text-slate-500">NISN: <span id="detNISN" class="font-mono"></span> | Kelas: <span id="detKelas" class="font-bold"></span></p>
+            <p class="text-xs text-slate-400 mt-0.5">Wali Kelas: <span id="detWali"></span></p>
+          </div>
+        </div>
+
+        <!-- Skor Besar -->
+        <div class="flex-grow flex justify-end items-center gap-4">
+          <div class="text-center p-3 px-5 bg-slate-50 rounded-xl border border-slate-200">
+            <p class="text-[10px] text-slate-400 font-bold uppercase">Skor Aktif</p>
+            <span id="detSkorPoin" class="text-3xl font-extrabold text-slate-900">0</span>
+          </div>
+          <div class="text-center p-3 px-5 bg-rose-50 rounded-xl border border-rose-100">
+            <p class="text-[10px] text-rose-400 font-bold uppercase">Status Sanksi</p>
+            <span id="detStatusSanksi" class="text-xs font-black text-rose-600 uppercase">Aman</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div id="actionContainer" class="hidden flex flex-wrap gap-2 mb-6">
+        <button onclick="showInputForm('pelanggaran')" class="bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2 px-4 rounded-xl transition flex items-center space-x-1.5 shadow">
+          <i class="fa-solid fa-plus-circle"></i>
+          <span>Tambah Catatan Pelanggaran</span>
+        </button>
+        <button id="btnKurangPoin" onclick="showInputForm('pengurangan')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-4 rounded-xl transition flex items-center space-x-1.5 shadow">
+          <i class="fa-solid fa-circle-minus"></i>
+          <span>Kurangi Poin (Pembinaan)</span>
+        </button>
+        <button onclick="printStudentReport()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold py-2 px-4 rounded-xl transition flex items-center space-x-1.5 shadow">
+          <i class="fa-solid fa-print"></i>
+          <span>Cetak Rapor Pelanggaran</span>
+        </button>
+      </div>
+
+      <!-- ROW: FORM INPUT (HIDDEN BY DEFAULT) -->
+      <div id="formContainer" class="hidden bg-slate-50 p-5 rounded-2xl border border-slate-200 mb-6 space-y-4">
+        <h5 id="formTitle" class="font-bold text-sm text-slate-800 flex items-center gap-1.5"></h5>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Pilih Aturan -->
+          <div id="formRulesSelection" class="space-y-3">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Cari Pelanggaran (Kata Kunci)</label>
+              <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="ruleSearchInput" oninput="liveFilterRules()" placeholder="Ketik kata kunci aturan (contoh: terlambat, HP)..." class="w-full bg-white border border-slate-200 pl-10 pr-4 py-2.5 rounded-xl text-sm focus:outline-none" autocomplete="off">
+                <!-- Dropdown Auto-Suggest -->
+                <div id="ruleSuggestBox" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto z-50 text-xs">
+                  <!-- Diisi oleh JS -->
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Atau Pilih Langsung Melalui Menu Turun (Dropdown)</label>
+              <select id="inputKodeAturan" onchange="onRuleSelected()" class="w-full bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-sm focus:outline-none">
+                <!-- Diisi oleh JS -->
+              </select>
+            </div>
+          </div>
+          <!-- Manual Skor (For Pembinaan) -->
+          <div id="formManualScore" class="hidden">
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Jumlah Poin Dikurangi</label>
+            <input type="number" id="inputManualSkor" value="5" class="w-full bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-sm focus:outline-none">
+          </div>
+          <!-- Catatan / Keterangan tambahan (Opsional) -->
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Catatan Tambahan / Detail Kejadian <span class="text-slate-400 font-normal">(Opsional)</span></label>
+            <textarea id="inputCatatan" rows="3" placeholder="Keterangan saksi atau kronologis singkat..." class="w-full bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-sm focus:outline-none"></textarea>
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-2 pt-2">
+          <button onclick="cancelInputForm()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold py-2 px-4 rounded-xl transition">Batal</button>
+          <button onclick="saveLogEntry()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 px-4 rounded-xl transition shadow">Simpan</button>
+        </div>
+      </div>
+
+      <!-- Riwayat Riil -->
+      <div>
+        <h5 class="font-bold text-sm text-slate-800 mb-3 flex items-center gap-1.5">
+          <i class="fa-solid fa-list-ul text-slate-400"></i>
+          <span>Riwayat Log Poin Semester Ini</span>
+        </h5>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead>
+              <tr class="border-b border-slate-100 text-slate-500 font-bold">
+                <th class="pb-2 w-28">Tanggal & Jam</th>
+                <th class="pb-2">Jenis Kejadian</th>
+                <th class="pb-2 text-center w-16">Poin</th>
+                <th class="pb-2">Pencatat (Guru)</th>
+                <th class="pb-2">Catatan Tambahan</th>
+              </tr>
+            </thead>
+            <tbody id="detTblLogs">
+              <!-- Diisi oleh JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== AREA PRINT LAPORAN (HIDDEN ON SCREEN) ==================== -->
+  <div id="printArea" class="hidden p-8 max-w-4xl mx-auto bg-white text-slate-900">
+    <div class="flex justify-between items-center border-b-2 border-slate-800 pb-4 mb-6">
+      <div>
+        <h2 class="text-2xl font-bold tracking-tight">SMA NEGERI YOSOWILANGUN</h2>
+        <p class="text-sm">Jalan Raya Yosowilangun No. 86, Lumajang, Jawa Timur</p>
+        <p class="text-xs text-slate-500">Telepon: (0334) 888123 | Email: smayos86@sch.id</p>
+      </div>
+      <div class="text-right">
+        <div class="border-2 border-slate-900 p-2 text-sm font-black inline-block">SITATIB</div>
+        <p class="text-xs text-slate-500 mt-2">Arsip Rapor Pelanggaran Murid</p>
+      </div>
+    </div>
+
+    <div class="text-center mb-6">
+      <h3 class="text-lg font-bold uppercase decoration-1 underline tracking-wider">RAPOR AKUMULASI POIN PELANGGARAN SISWA</h3>
+      <p class="text-xs text-slate-600 mt-1">Periode: <span id="printPeriode">Semester Ganjil 2026/2027</span></p>
+    </div>
+
+    <table class="w-full text-sm mb-6 border-collapse">
+      <tr>
+        <td class="font-semibold py-1 w-36">Nama Siswa</td>
+        <td class="py-1">: <span id="printNama"></span></td>
+        <td class="font-semibold py-1 w-32">Kelas</td>
+        <td class="py-1">: <span id="printKelas"></span></td>
+      </tr>
+      <tr>
+        <td class="font-semibold py-1">NISN</td>
+        <td class="py-1">: <span id="printNISN" class="font-mono"></span></td>
+        <td class="font-semibold py-1">Wali Kelas</td>
+        <td class="py-1">: <span id="printWali"></span></td>
+      </tr>
+      <tr>
+        <td class="font-semibold py-1">Total Skor Aktif</td>
+        <td class="py-1">: <span id="printTotalSkor" class="font-bold text-red-600"></span> Poin</td>
+        <td class="font-semibold py-1">Status Pembinaan</td>
+        <td class="py-1">: <span id="printStatus" class="font-bold underline uppercase"></span></td>
+      </tr>
+    </table>
+
+    <h4 class="font-bold text-xs text-slate-800 uppercase tracking-wider mb-2">Daftar Riwayat Catatan Pelanggaran & Pengurangan Poin:</h4>
+    <table class="w-full text-xs border-collapse border border-slate-300 text-left mb-8">
+      <thead>
+        <tr class="bg-slate-100 border-b border-slate-300">
+          <th class="p-2 border-r border-slate-300 w-24">Tanggal</th>
+          <th class="p-2 border-r border-slate-300">Jenis Pelanggaran / Tindakan</th>
+          <th class="p-2 border-r border-slate-300 text-center w-16">Poin</th>
+          <th class="p-2 border-r border-slate-300">Pencatat</th>
+          <th class="p-2">Catatan Detail</th>
+        </tr>
+      </thead>
+      <tbody id="printTblLogs">
+        <!-- Diisi oleh JS -->
+      </tbody>
+    </table>
+
+    <div class="grid grid-cols-3 gap-6 text-center text-xs mt-12">
+      <div>
+        <p class="mb-12">Mengetahui,<br>Kepala Sekolah SMAYO</p>
+        <p class="font-bold underline">Drs. H. Ahmad Fauzi, M.Pd</p>
+        <p class="text-[10px] text-slate-500">NIP. 19740512 200212 1 003</p>
+      </div>
+      <div>
+        <p class="mb-12">Koordinator BK / Tatib</p>
+        <p class="font-bold underline">Siti Rahmawati, S.Psi</p>
+        <p class="text-[10px] text-slate-500">NIP. 19810423 200902 2 004</p>
+      </div>
+      <div>
+        <p class="mb-12">Yosowilangun, <span id="printTanggalSekarang"></span><br>Wali Kelas</p>
+        <p id="printTtdWali" class="font-bold underline">_________________</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Notification Box -->
+  <div id="toastBox" class="hidden fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-xl flex items-center space-x-3 text-sm border border-slate-800">
+    <i id="toastIcon" class="fa-solid fa-circle-info text-blue-400"></i>
+    <span id="toastMsg">Notifikasi di sini</span>
+  </div>
+
+  <!-- CUSTOM CONFIRMATION MODAL (No alert, No confirm allowed!) -->
+  <div id="customConfirmModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative border border-slate-100">
+      <div class="text-center mb-6">
+        <div class="inline-flex p-3 bg-rose-50 text-rose-600 rounded-2xl text-2xl mb-3">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h4 id="confirmTitle" class="font-bold text-lg text-slate-800">Konfirmasi</h4>
+        <p id="confirmMessage" class="text-xs text-slate-500 mt-1">Apakah Anda yakin ingin melakukan tindakan ini?</p>
+      </div>
+      <div class="flex space-x-2">
+        <button id="btnConfirmCancel" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 rounded-xl transition text-sm">Batal</button>
+        <button id="btnConfirmProceed" class="w-1/2 bg-rose-600 hover:bg-rose-500 text-white font-semibold py-2.5 rounded-xl transition text-sm">Ya, Eksekusi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+  <script>
+    // --- DATABASE MASTER & SIMULASI ---
+    const MOCK_RULES = [
+      { id: 1, kode: "1.1.1", uraian: "Terlambat masuk gerbang sekolah", skor: 5, keterangan: "Sita HP dan pembinaan dengan TIM TATIB, BK dan Wali kelas" },
+      { id: 2, kode: "1.1.2", uraian: "Terlambat masuk gerbang sekolah > 5 menit", skor: 7, keterangan: "Sita HP dan pembinaan dengan TIM TATIB, BK dan Wali kelas" },
+      { id: 3, kode: "1.1.3", uraian: "Terlambat masuk gerbang sekolah > 30 menit", skor: 10, keterangan: "Sita HP dan pembinaan dengan TIM TATIB, BK dan Wali kelas" },
+      { id: 4, kode: "1.9", uraian: "Kerapian rambut tidak sesuai ketentuan", skor: 5, keterangan: "Sita HP dan pembinaan dengan TIM TATIB, BK dan Wali kelas" },
+      { id: 5, kode: "1.9", uraian: "Tidak memakai topi pada saat upacara", skor: 5, keterangan: "Sita HP dan pembinaan dengan TIM TATIB, BK dan Wali kelas" },
+      { id: 6, kode: "1.10", uraian: "Memakai topi selain topi sekolah dilingkungan sekolah", skor: 5, keterangan: "Sita HP dan Topi, serta pembinaan dengan TIM TATIB, BK dan Wali kelas" },
+      { id: 7, kode: "1.11", uraian: "Memakai atribut / accessories yang melambangkan hal-hal yang tidak benar", skor: 5, keterangan: "Sita HP dan pembinaan dengan TIM TATIB, BK dan Wali kelas" },
+      { id: 8, kode: "1.12", uraian: "Tidak memakai sepatu hitam pada hari senin, selasa dan jumat", skor: 5, keterangan: "Sita HP dan pembinaan dengan TIM TATIB, BK dan Wali kelas" },
+      { id: 9, kode: "1.13", uraian: "Tidak memakai atribut sesuai ketentuan", skor: 5, keterangan: "Sita HP dan pembinaan dengan TIM TATIB, BK dan Wali kelas" },
+      { id: 10, kode: "1.14", uraian: "Membaca komik, majalah, novel, bermain HP, dan sejenisnya saat PBM tanpa seijin Guru", skor: 5, keterangan: "Sita HP dan pembinaan dengan TIM TATIB, BK, Wali kelas dan guru mapel" },
+      { id: 11, kode: "2.1", uraian: "Mengkotori sarana / prasarana pendidikan", skor: 10, keterangan: "Kerja bakti kebersihan dan pembinaan wali kelas" },
+      { id: 12, kode: "2.2", uraian: "Merusak sarana/ prasarana sekolah", skor: 15, keterangan: "Ganti rugi fisik, pembinaan Tim Tatib, BK dan Kesiswaan" },
+      { id: 13, kode: "3.1", uraian: "Membawa, menyimpan / merokok di sekolah atau di luar sekolah masih memakai atribut sekolah", skor: 25, keterangan: "Sita HP dan rokok, serta pembinaan dengan TIM TATIB, BK dan Wali kelas" },
+      { id: 14, kode: "3.2", uraian: "Tidak membawa buku pelajaran sesuai jadwal pelajaran di kelas", skor: 3, keterangan: "Pemberian tugas mandiri oleh guru mata pelajaran terkait" },
+      { id: 15, kode: "4.7", uraian: "Bertindak tidak sopan terhadap kepala sekolah, pendidik, pegawai, maupun tamu", skor: 25, keterangan: "Sita HP dan pembinaan khusus dengan TIM TATIB, BK dan Wali kelas" },
+      { id: 16, kode: "4.12", uraian: "Menerobos / melompat jendela / pagar sekolah saat PBM", skor: 25, keterangan: "Sita HP dan pembinaan dengan TIM TATIB, BK, Wali kelas, dan Guru Mapel" },
+      { id: 17, kode: "5.3", uraian: "Menggunakan jasa/ mewakilkan ke orang lain pada saat pendatangkan Orang Tua", skor: 20, keterangan: "Pemanggilan resmi ulang, sita HP dan pembinaan dengan TIM TATIB, BK dan Wali kelas" },
+      { id: 18, kode: "6.3", uraian: "Tidak menjaga diri dari tindakan asusila ringan (misalnya: berduaan)", skor: 30, keterangan: "Pemanggilan Orang Tua dan pembinaan dengan TIM TATIB, BK dan Wali kelas" },
+      { id: 19, kode: "7.1", uraian: "Menikah, hamil, menghamili", skor: 120, keterangan: "Dikembalikan sepenuhnya kepada orang tua / Drop Out" },
+      { id: 20, kode: "7.9", uraian: "Berjudi atau menggunakan alat judi di lingkungan sekolah", skor: 70, keterangan: "Sita Hp dan pembinaan dengan TIM TATIB, BK dan Wali kelas, serta Kesiswaan" },
+      { id: 21, kode: "7.10", uraian: "Memalsukan tanda tangan kepala sekolah, guru, tenaga pendidik dan pegawai lainnya", skor: 65, keterangan: "Sita Hp dan pembinaan dengan TIM TATIB, BK dan Wali kelas, serta Kesiswaan" },
+      { id: 22, kode: "7.11", uraian: "Mengintimidasi kepala sekolah, guru, tenaga pendidik dan pegawai ataupun sesama teman", skor: 80, keterangan: "Sita Hp dan pembinaan dengan TIM TATIB, BK dan Wali kelas, serta Kesiswaan" }
+    ];
+
+    const MOCK_STUDENTS = [
+      { nisn: "2324001", nama: "Aditya Pratama", kelas: "XI-MIPA-1", waliKelas: "Dra. Hani Hartini", hpOrangTua: "081234567890" },
+      { nisn: "2324002", nama: "Anissa Wulandari", kelas: "XI-MIPA-1", waliKelas: "Dra. Hani Hartini", hpOrangTua: "081298765432" },
+      { nisn: "2324003", nama: "Budi Santoso", kelas: "XI-MIPA-2", waliKelas: "Hendra Wijaya, S.Pd", hpOrangTua: "081345678901" },
+      { nisn: "2324004", nama: "Citra Kirana", kelas: "XI-MIPA-2", waliKelas: "Hendra Wijaya, S.Pd", hpOrangTua: "081456789012" },
+      { nisn: "2324005", nama: "Dimas Anggara", kelas: "X-1", waliKelas: "Siti Rahayu, S.Pd", hpOrangTua: "081567890123" },
+      { nisn: "2324006", nama: "Eka Wahyuni", kelas: "X-1", waliKelas: "Siti Rahayu, S.Pd", hpOrangTua: "081678901234" },
+      { nisn: "2324007", nama: "Fajar Nugraha", kelas: "X-2", waliKelas: "Ahmad Junaidi, S.Pd", hpOrangTua: "081789012345" },
+      { nisn: "2324008", nama: "Gita Lestari", kelas: "X-2", waliKelas: "Ahmad Junaidi, S.Pd", hpOrangTua: "081890123456" },
+      { nisn: "2324009", nama: "Hendra Kurniawan", kelas: "XII-IPS-1", waliKelas: "Sri Mulyani, M.Pd", hpOrangTua: "081901234567" },
+      { nisn: "2324010", nama: "Indah Permatasari", kelas: "XII-IPS-1", waliKelas: "Sri Mulyani, M.Pd", hpOrangTua: "081112233445" }
+    ];
+
+    const MOCK_LOGS = [
+      { timestamp: "2026-06-15T07:15:00.000Z", nisn: "2324001", kode: "1.1.1", skor: 5, semester: "Ganjil", tahunAjaran: "2026/2027", pencatat: "Hendra Wijaya, S.Pd", keterangan: "Terlambat 10 menit di gerbang utama" },
+      { timestamp: "2026-06-16T07:35:00.000Z", nisn: "2324003", kode: "1.1.3", skor: 10, semester: "Ganjil", tahunAjaran: "2026/2027", pencatat: "Siti Rahayu, S.Pd", keterangan: "Terlambat 35 menit, beralasan macet" },
+      { timestamp: "2026-06-16T09:40:00.000Z", nisn: "2324005", kode: "1.9", skor: 5, semester: "Ganjil", tahunAjaran: "2026/2027", pencatat: "Dra. Hani Hartini", keterangan: "Rambut terlalu gondrong melebihi kerah baju" },
+      { timestamp: "2026-06-17T11:00:00.000Z", nisn: "2324001", kode: "3.1", skor: 25, semester: "Ganjil", tahunAjaran: "2026/2027", pencatat: "Hendra Wijaya, S.Pd", keterangan: "Ketahuan merokok di belakang kantin saat jam istirahat" },
+      { timestamp: "2026-06-17T14:30:00.000Z", nisn: "2324001", kode: "REHAB_BK", skor: -10, semester: "Ganjil", tahunAjaran: "2026/2027", pencatat: "BK - Siti Rahmawati", keterangan: "Telah menyelesaikan sanksi kebersihan masjid dan pembinaan mandiri" }
+    ];
+
+    // --- STATE MANAGER ---
+    let appState = {
+      isOffline: true,
+      gasUrl: "",
+      user: null, // Berisi: { nama, email, role }
+      settings: { semester: "Ganjil", tahunAjaran: "2026/2027" },
+      rules: [...MOCK_RULES],
+      students: [...MOCK_STUDENTS],
+      logs: [...MOCK_LOGS],
+      activeTab: 'dashboard',
+      selectedStudentNisn: null,
+      currentActiveFormType: 'pelanggaran'
+    };
+
+    // --- CHART INSTANCES ---
+    let lineChartInstance = null;
+    let pieChartInstance = null;
+
+    // --- INITIALIZATION ---
+    window.onload = function() {
+      const savedUrl = localStorage.getItem("SITATIB_GAS_URL");
+      const savedUser = localStorage.getItem("SITATIB_USER");
+      
+      if (savedUrl) {
+        appState.gasUrl = savedUrl;
+        document.getElementById("gasUrlInput").value = savedUrl;
+        appState.isOffline = false;
+        updateConnectionUI();
+      }
+      
+      if (savedUser) {
+        appState.user = JSON.parse(savedUser);
+        updateUserUI();
+      }
+
+      // Tutup otomatis suggest box aturan jika klik sembarang
+      document.addEventListener("click", function(e) {
+        const suggestBox = document.getElementById("ruleSuggestBox");
+        const searchInput = document.getElementById("ruleSearchInput");
+        if (suggestBox && !suggestBox.contains(e.target) && e.target !== searchInput) {
+          suggestBox.classList.add("hidden");
+        }
+      });
+
+      loadData();
+    }
+
+    function loadData() {
+      if (appState.isOffline) {
+        refreshUI();
+      } else {
+        showToast("Menghubungkan ke Google Sheets...", "info");
+        fetch(`${appState.gasUrl}?action=getInitialData`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === "success") {
+              appState.settings = data.settings;
+              if (data.rules && data.rules.length > 0) appState.rules = data.rules;
+              fetchStudentsAndLogs();
+            } else {
+              showToast("Gagal memuat konfigurasi awal dari GAS. Mode Offline diaktifkan.", "error");
+              appState.isOffline = true;
+              refreshUI();
+            }
+          })
+          .catch(err => {
+            showToast("Koneksi GAS gagal. Menggunakan Mode Offline.", "error");
+            appState.isOffline = true;
+            refreshUI();
+          });
+      }
+    }
+
+    function fetchStudentsAndLogs() {
+      Promise.all([
+        fetch(`${appState.gasUrl}?action=getStudents`).then(res => res.json()),
+        fetch(`${appState.gasUrl}?action=getLogs`).then(res => res.json())
+      ])
+      .then(([studentRes, logRes]) => {
+        if (studentRes.status === "success") appState.students = studentRes.students;
+        if (logRes.status === "success") appState.logs = logRes.logs;
+        refreshUI();
+        showToast("Database Sinkron dengan Google Sheets!", "success");
+      })
+      .catch(err => {
+        showToast("Gagal menyinkronkan data siswa. Mode Offline aktif.", "error");
+        appState.isOffline = true;
+        refreshUI();
+      });
+    }
+
+    function refreshUI() {
+      document.getElementById("lblTahunAjaran").textContent = appState.settings.tahunAjaran;
+      document.getElementById("lblSemester").textContent = "Semester " + appState.settings.semester;
+      document.getElementById("adminTahunAjaran").value = appState.settings.tahunAjaran;
+      document.getElementById("adminSemester").value = appState.settings.semester;
+
+      calculateMetrics();
+      renderDashboardTables();
+      renderCharts();
+      renderRulesTable();
+      renderStudentsGrid();
+    }
+
+    // --- KALKULASI POIN DAN METRIK ---
+    function getStudentActiveScore(nisn) {
+      const filteredLogs = appState.logs.filter(log => 
+        log.nisn === nisn && 
+        log.semester === appState.settings.semester && 
+        log.tahunAjaran === appState.settings.tahunAjaran
+      );
+      
+      let score = 0;
+      filteredLogs.forEach(log => {
+        score += log.skor;
+      });
+      return Math.max(0, score);
+    }
+
+    function getSanksiStatus(score) {
+      if (score >= 100) return "Sanksi Keras / DO";
+      if (score >= 75) return "SP 3 / Panggilan Ortu 3";
+      if (score >= 50) return "SP 2 / Panggilan Ortu 2";
+      if (score >= 25) return "SP 1 / Panggilan Ortu 1";
+      if (score > 0) return "Teguran & Pembinaan";
+      return "Berkelakuan Baik";
+    }
+
+    function calculateMetrics() {
+      const activeStudents = appState.students.length;
+      let studentsWithScore = 0;
+      let todayCount = 0;
+      let totalPembinaan = 0;
+
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      appState.students.forEach(st => {
+        const score = getStudentActiveScore(st.nisn);
+        if (score > 0) {
+          studentsWithScore++;
+        }
+      });
+
+      appState.logs.forEach(log => {
+        const logDateStr = new Date(log.timestamp).toISOString().split('T')[0];
+        if (logDateStr === todayStr && log.skor > 0) {
+          todayCount++;
+        }
+        if (log.skor < 0) {
+          totalPembinaan++;
+        }
+      });
+
+      document.getElementById("statTotalSiswa").textContent = activeStudents;
+      document.getElementById("statSiswaMelanggar").textContent = studentsWithScore;
+      document.getElementById("statPelanggaranHariIni").textContent = todayCount;
+      document.getElementById("statTotalPembinaan").textContent = totalPembinaan;
+    }
+
+    // --- TAB SWITCHER & ROLE SECURITY ---
+    function switchTab(tabId) {
+      // SECURITY VERIFICATION FOR ACTIVE SESSIONS
+      if (tabId === 'admin') {
+        if (!appState.user || appState.user.role !== 'Admin') {
+          showToast("Akses ditolak! Halaman ini hanya untuk Administrator.", "error");
+          return;
+        }
+      }
+      if (tabId === 'siswa') {
+        if (!appState.user) {
+          showToast("Akses ditolak! Menu database siswa hanya dapat dibuka oleh staf guru terverifikasi.", "error");
+          return;
+        }
+      }
+
+      appState.activeTab = tabId;
+      document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
+      document.getElementById(`tab-${tabId}`).classList.remove("hidden");
+
+      document.querySelectorAll(".nav-btn").forEach(btn => {
+        btn.className = "nav-btn px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl flex items-center space-x-2 whitespace-nowrap transition";
+      });
+      const activeBtn = document.getElementById(`btn-${tabId}`);
+      if (activeBtn) {
+        activeBtn.className = "nav-btn px-4 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-xl flex items-center space-x-2 whitespace-nowrap transition border border-blue-100";
+      }
+
+      if (tabId === 'dashboard') {
+        setTimeout(renderCharts, 100);
+      }
+    }
+
+    // --- RENDER DASHBOARD TABLES ---
+    function renderDashboardTables() {
+      const recentLogsBody = document.getElementById("tblRecentLogs");
+      recentLogsBody.innerHTML = "";
+      
+      const sortedLogs = [...appState.logs].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 5);
+      
+      if (sortedLogs.length === 0) {
+        recentLogsBody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-400">Tidak ada log aktivitas hari ini.</td></tr>`;
+      } else {
+        sortedLogs.forEach(log => {
+          const student = appState.students.find(s => s.nisn === log.nisn) || { nama: "Siswa Luar" };
+          const badgeClass = log.skor < 0 ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800";
+          const scoreText = log.skor < 0 ? log.skor : `+${log.skor}`;
+          const ruleDesc = log.kode.includes("REHAB") ? "Pembinaan / Reset Poin" : (appState.rules.find(r => r.kode === log.kode)?.uraian || log.kode);
+
+          const tr = document.createElement("tr");
+          tr.className = "border-b border-slate-100 hover:bg-slate-50/50 transition cursor-pointer";
+          tr.onclick = () => {
+            if (appState.user) {
+              openStudentDetail(log.nisn);
+            } else {
+              showToast("Silakan login guru terlebih dahulu untuk melihat profil lengkap siswa.", "info");
+            }
+          };
+          tr.innerHTML = `
+            <td class="py-3.5">
+              <span class="font-bold text-slate-800 text-xs block">${student.nama}</span>
+              <span class="text-[10px] text-slate-400 font-mono">${log.nisn}</span>
+            </td>
+            <td class="py-3.5 max-w-[180px] truncate text-xs text-slate-600">${ruleDesc}</td>
+            <td class="py-3.5 text-center">
+              <span class="px-2 py-0.5 rounded-full text-xs font-bold ${badgeClass}">${scoreText}</span>
+            </td>
+            <td class="py-3.5 text-right text-xs text-slate-500 font-semibold">${log.pencatat.split(" ")[0]}</td>
+          `;
+          recentLogsBody.appendChild(tr);
+        });
+      }
+
+      const topOffendersBody = document.getElementById("tblTopOffenders");
+      topOffendersBody.innerHTML = "";
+
+      const studentScores = appState.students.map(st => {
+        return {
+          ...st,
+          score: getStudentActiveScore(st.nisn)
+        };
+      })
+      .filter(st => st.score > 0)
+      .sort((a,b) => b.score - a.score)
+      .slice(0, 5);
+
+      if (studentScores.length === 0) {
+        topOffendersBody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-400">Semua siswa berkelakuan sangat baik!</td></tr>`;
+      } else {
+        studentScores.forEach(st => {
+          const status = getSanksiStatus(st.score);
+          const tr = document.createElement("tr");
+          tr.className = "border-b border-slate-100 hover:bg-rose-50/20 transition cursor-pointer";
+          tr.onclick = () => {
+            if (appState.user) {
+              openStudentDetail(st.nisn);
+            } else {
+              showToast("Silakan login guru terlebih dahulu untuk melihat tindakan bimbingan.", "info");
+            }
+          };
+          tr.innerHTML = `
+            <td class="py-3.5 font-bold text-slate-800 text-xs">${st.nama}</td>
+            <td class="py-3.5 text-xs text-slate-500">${st.kelas}</td>
+            <td class="py-3.5 text-center">
+              <span class="px-3 py-1 bg-rose-600 text-white rounded-full text-xs font-extrabold shadow-sm">${st.score}</span>
+            </td>
+            <td class="py-3.5 text-right">
+              <span class="text-[10px] bg-rose-100 text-rose-700 font-black px-2 py-1 rounded-lg uppercase tracking-wide border border-rose-200">${status}</span>
+            </td>
+          `;
+          topOffendersBody.appendChild(tr);
+        });
+      }
+    }
+
+    // --- RENDER GRAFIK ---
+    function renderCharts() {
+      const lineCtx = document.getElementById("chartTrenPelanggaran");
+      if (!lineCtx) return;
+
+      if (lineChartInstance) lineChartInstance.destroy();
+
+      const dates = [];
+      const counts = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dayStr = d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' });
+        dates.push(dayStr);
+
+        const isoStr = d.toISOString().split('T')[0];
+        const logCount = appState.logs.filter(log => {
+          const logDateStr = new Date(log.timestamp).toISOString().split('T')[0];
+          return logDateStr === isoStr && log.skor > 0;
+        }).length;
+        counts.push(logCount);
+      }
+
+      lineChartInstance = new Chart(lineCtx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{
+            label: 'Pelanggaran Tercatat',
+            data: counts,
+            borderColor: 'rgb(79, 70, 229)',
+            backgroundColor: 'rgba(79, 70, 229, 0.1)',
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.3,
+            pointBackgroundColor: 'rgb(79, 70, 229)'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 }
+            }
+          }
+        }
+      });
+
+      const pieCtx = document.getElementById("chartKategoriPelanggaran");
+      if (!pieCtx) return;
+
+      if (pieChartInstance) pieChartInstance.destroy();
+
+      const categories = {
+        "Keterlambatan / Kerapian": 0,
+        "Fasilitas / Sarpras": 0,
+        "Ketertiban Kelas / PBM": 0,
+        "Karakter / Etika": 0,
+        "Pelanggaran Berat": 0
+      };
+
+      appState.logs.forEach(log => {
+        if (log.skor <= 0) return;
+        const prefix = log.kode.split('.')[0];
+        if (prefix === "1") categories["Keterlambatan / Kerapian"]++;
+        else if (prefix === "2") categories["Fasilitas / Sarpras"]++;
+        else if (prefix === "3" || prefix === "4") categories["Ketertiban Kelas / PBM"]++;
+        else if (prefix === "5" || prefix === "6") categories["Karakter / Etika"]++;
+        else if (prefix === "7") categories["Pelanggaran Berat"]++;
+      });
+
+      pieChartInstance = new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(categories),
+          datasets: [{
+            data: Object.values(categories),
+            backgroundColor: [
+              '#3b82f6',
+              '#6366f1',
+              '#f59e0b',
+              '#10b981',
+              '#ef4444'
+            ],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                boxWidth: 12,
+                font: { size: 10 }
+              }
+            }
+          },
+          cutout: '65%'
+        }
+      });
+    }
+
+    // --- RENDER ATURAN (70 JENIS) ---
+    function renderRulesTable() {
+      const tblRules = document.getElementById("tblRules");
+      tblRules.innerHTML = "";
+
+      appState.rules.forEach(rule => {
+        const tr = document.createElement("tr");
+        tr.className = "border-b border-slate-100 hover:bg-slate-50 transition text-xs";
+        tr.innerHTML = `
+          <td class="p-3 font-mono font-bold text-slate-700">${rule.kode}</td>
+          <td class="p-3 font-semibold text-slate-800">${rule.uraian}</td>
+          <td class="p-3 text-center">
+            <span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded font-black">${rule.skor}</span>
+          </td>
+          <td class="p-3 text-slate-500 italic">${rule.keterangan || "-"}</td>
+        `;
+        tblRules.appendChild(tr);
+      });
+    }
+
+    function filterRules() {
+      const val = document.getElementById("searchRules").value.toLowerCase();
+      const filtered = appState.rules.filter(r => 
+        r.kode.toLowerCase().includes(val) || 
+        r.uraian.toLowerCase().includes(val)
+      );
+
+      const tblRules = document.getElementById("tblRules");
+      tblRules.innerHTML = "";
+
+      filtered.forEach(rule => {
+        const tr = document.createElement("tr");
+        tr.className = "border-b border-slate-100 hover:bg-slate-50 transition text-xs";
+        tr.innerHTML = `
+          <td class="p-3 font-mono font-bold text-slate-700">${rule.kode}</td>
+          <td class="p-3 font-semibold text-slate-800">${rule.uraian}</td>
+          <td class="p-3 text-center">
+            <span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded font-black">${rule.skor}</span>
+          </td>
+          <td class="p-3 text-slate-500 italic">${rule.keterangan || "-"}</td>
+        `;
+        tblRules.appendChild(tr);
+      });
+    }
+
+    // --- RENDER DATABASE SISWA (HANYA 10 POIN TERTINGGI DARI SEMUA KELAS) ---
+    function renderStudentsGrid() {
+      const grid = document.getElementById("studentGrid");
+      grid.innerHTML = "";
+
+      // Mengambil 10 siswa dengan poin tertinggi secara absolut
+      const top10Students = appState.students.map(st => {
+        return {
+          ...st,
+          score: getStudentActiveScore(st.nisn)
+        };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10);
+
+      top10Students.forEach(st => {
+        const status = getSanksiStatus(st.score);
+        
+        let cardColor = "border-slate-200 hover:border-blue-400";
+        let scoreBadgeColor = "bg-slate-100 text-slate-700";
+        let sanksiBadgeColor = "bg-slate-100 text-slate-500";
+
+        if (st.score >= 75) {
+          cardColor = "border-red-300 hover:border-red-500 bg-red-50/20";
+          scoreBadgeColor = "bg-red-600 text-white shadow-sm";
+          sanksiBadgeColor = "bg-red-100 text-red-700 border border-red-200";
+        } else if (st.score >= 25) {
+          cardColor = "border-amber-300 hover:border-amber-500 bg-amber-50/10";
+          scoreBadgeColor = "bg-amber-500 text-white shadow-sm";
+          sanksiBadgeColor = "bg-amber-100 text-amber-700 border border-amber-200";
+        } else if (st.score > 0) {
+          cardColor = "border-blue-200 hover:border-blue-400";
+          scoreBadgeColor = "bg-blue-600 text-white shadow-sm";
+          sanksiBadgeColor = "bg-blue-100 text-blue-700 border border-blue-200";
+        }
+
+        const div = document.createElement("div");
+        div.className = `bg-white p-5 rounded-2xl border-2 ${cardColor} transition shadow-sm cursor-pointer relative overflow-hidden group`;
+        div.onclick = () => openStudentDetail(st.nisn);
+        div.innerHTML = `
+          <div class="absolute right-0 top-0 w-24 h-24 bg-indigo-50 rounded-bl-full -z-10 group-hover:scale-110 transition-transform"></div>
+          
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <h4 class="font-bold text-slate-800 text-sm tracking-tight">${st.nama}</h4>
+              <p class="text-[11px] text-slate-400 font-mono mt-0.5">NISN: ${st.nisn}</p>
+            </div>
+            <span class="px-3 py-1 rounded-xl text-sm font-black ${scoreBadgeColor}">${st.score}</span>
+          </div>
+
+          <div class="flex items-center justify-between mt-6 pt-3 border-t border-slate-100 text-xs">
+            <div>
+              <span class="text-slate-400">Kelas:</span>
+              <span class="font-bold text-slate-700 ml-1">${st.kelas}</span>
+            </div>
+            <span class="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide ${sanksiBadgeColor}">${status}</span>
+          </div>
+        `;
+        grid.appendChild(div);
+      });
+    }
+
+    function filterStudents() {
+      const searchVal = document.getElementById("searchStudent").value.toLowerCase();
+      const classVal = document.getElementById("filterClass").value;
+
+      // Filter dari daftar 10 siswa teratas
+      const top10Students = appState.students.map(st => {
+        return {
+          ...st,
+          score: getStudentActiveScore(st.nisn)
+        };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10);
+
+      const filtered = top10Students.filter(st => {
+        const matchesSearch = st.nama.toLowerCase().includes(searchVal) || st.nisn.includes(searchVal);
+        const matchesClass = classVal === "" || st.kelas === classVal;
+        return matchesSearch && matchesClass;
+      });
+
+      const grid = document.getElementById("studentGrid");
+      grid.innerHTML = "";
+
+      filtered.forEach(st => {
+        const status = getSanksiStatus(st.score);
+        
+        let cardColor = "border-slate-200 hover:border-blue-400";
+        let scoreBadgeColor = "bg-slate-100 text-slate-700";
+        let sanksiBadgeColor = "bg-slate-100 text-slate-500";
+
+        if (st.score >= 75) {
+          cardColor = "border-red-300 hover:border-red-500 bg-red-50/20";
+          scoreBadgeColor = "bg-red-600 text-white shadow-sm";
+          sanksiBadgeColor = "bg-red-100 text-red-700 border border-red-200";
+        } else if (st.score >= 25) {
+          cardColor = "border-amber-300 hover:border-amber-500 bg-amber-50/10";
+          scoreBadgeColor = "bg-amber-500 text-white shadow-sm";
+          sanksiBadgeColor = "bg-amber-100 text-amber-700 border border-amber-200";
+        } else if (st.score > 0) {
+          cardColor = "border-blue-200 hover:border-blue-400";
+          scoreBadgeColor = "bg-blue-600 text-white shadow-sm";
+          sanksiBadgeColor = "bg-blue-100 text-blue-700 border border-blue-200";
+        }
+
+        const div = document.createElement("div");
+        div.className = `bg-white p-5 rounded-2xl border-2 ${cardColor} transition shadow-sm cursor-pointer relative overflow-hidden group`;
+        div.onclick = () => openStudentDetail(st.nisn);
+        div.innerHTML = `
+          <div class="absolute right-0 top-0 w-24 h-24 bg-indigo-50 rounded-bl-full -z-10 group-hover:scale-110 transition-transform"></div>
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <h4 class="font-bold text-slate-800 text-sm tracking-tight">${st.nama}</h4>
+              <p class="text-[11px] text-slate-400 font-mono mt-0.5">NISN: ${st.nisn}</p>
+            </div>
+            <span class="px-3 py-1 rounded-xl text-sm font-black ${scoreBadgeColor}">${st.score}</span>
+          </div>
+          <div class="flex items-center justify-between mt-6 pt-3 border-t border-slate-100 text-xs">
+            <div>
+              <span class="text-slate-400">Kelas:</span>
+              <span class="font-bold text-slate-700 ml-1">${st.kelas}</span>
+            </div>
+            <span class="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide ${sanksiBadgeColor}">${status}</span>
+          </div>
+        `;
+        grid.appendChild(div);
+      });
+    }
+
+    function simulateQRScan() {
+      // Pembatasan akses simulator scan
+      if (!appState.user) {
+        showToast("Hanya Guru terdaftar yang dapat memindai kartu pelajar siswa.", "error");
+        return;
+      }
+
+      // Memilih acak dari 10 murid teratas
+      const top10Students = appState.students.map(st => {
+        return {
+          ...st,
+          score: getStudentActiveScore(st.nisn)
+        };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10);
+
+      const index = Math.floor(Math.random() * top10Students.length);
+      const student = top10Students[index];
+      showToast(`Scan QR Berhasil! Membuka data ${student.nama}`, "success");
+      openStudentDetail(student.nisn);
+    }
+
+    // --- DETAIL SISWA MODAL ---
+    function openStudentDetail(nisn) {
+      appState.selectedStudentNisn = nisn;
+      const student = appState.students.find(s => s.nisn === nisn);
+      if (!student) return;
+
+      const score = getStudentActiveScore(nisn);
+      const status = getSanksiStatus(score);
+
+      document.getElementById("detNama").textContent = student.nama;
+      document.getElementById("detNISN").textContent = student.nisn;
+      document.getElementById("detKelas").textContent = student.kelas;
+      document.getElementById("detWali").textContent = student.waliKelas;
+      document.getElementById("detInisial").textContent = student.nama.substring(0,2).toUpperCase();
+      document.getElementById("detSkorPoin").textContent = score;
+      document.getElementById("detStatusSanksi").textContent = status;
+
+      const statusContainer = document.getElementById("detStatusSanksi").parentElement;
+      if (score >= 75) {
+        statusContainer.className = "text-center p-3 px-5 bg-red-100 text-red-700 rounded-xl border border-red-200 animate-pulse";
+      } else if (score >= 25) {
+        statusContainer.className = "text-center p-3 px-5 bg-amber-100 text-amber-700 rounded-xl border border-amber-200";
+      } else {
+        statusContainer.className = "text-center p-3 px-5 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100";
+      }
+
+      // Atur Hak Akses Form Input & Sanksi
+      const actionContainer = document.getElementById("actionContainer");
+      if (appState.user) {
+        actionContainer.classList.remove("hidden");
+        const btnKurangPoin = document.getElementById("btnKurangPoin");
+        // Guru Piket tidak diperbolehkan mengurangi poin (Hanya Admin & Tim Tatib/BK)
+        if (appState.user.role === "Guru Piket") {
+          btnKurangPoin.classList.add("hidden");
+        } else {
+          btnKurangPoin.classList.remove("hidden");
+        }
+      } else {
+        actionContainer.classList.add("hidden");
+      }
+
+      cancelInputForm();
+      renderStudentLogs(nisn);
+
+      document.getElementById("studentDetailModal").classList.remove("hidden");
+    }
+
+    function closeStudentDetail() {
+      document.getElementById("studentDetailModal").classList.add("hidden");
+      appState.selectedStudentNisn = null;
+    }
+
+    function renderStudentLogs(nisn) {
+      const logsBody = document.getElementById("detTblLogs");
+      logsBody.innerHTML = "";
+
+      const studentLogs = appState.logs.filter(log => 
+        log.nisn === nisn && 
+        log.semester === appState.settings.semester && 
+        log.tahunAjaran === appState.settings.tahunAjaran
+      ).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      if (studentLogs.length === 0) {
+        logsBody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-400">Belum ada riwayat pelanggaran pada semester ini.</td></tr>`;
+      } else {
+        studentLogs.forEach(log => {
+          const isReduction = log.skor < 0;
+          const badgeClass = isReduction ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800";
+          const scoreText = isReduction ? log.skor : `+${log.skor}`;
+          const ruleDesc = log.kode.includes("REHAB") ? "Pemulihan / Pembinaan" : (appState.rules.find(r => r.kode === log.kode)?.uraian || log.kode);
+          const dateFormatted = new Date(log.timestamp).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+          const tr = document.createElement("tr");
+          tr.className = "border-b border-slate-100 hover:bg-slate-50 transition";
+          tr.innerHTML = `
+            <td class="py-2.5 font-semibold text-slate-500">${dateFormatted}</td>
+            <td class="py-2.5 font-bold text-slate-700">${ruleDesc}</td>
+            <td class="py-2.5 text-center">
+              <span class="px-2 py-0.5 rounded text-xs font-black ${badgeClass}">${scoreText}</span>
+            </td>
+            <td class="py-2.5 text-slate-500 font-semibold">${log.pencatat}</td>
+            <td class="py-2.5 text-slate-400 italic">${log.keterangan || "-"}</td>
+          `;
+          logsBody.appendChild(tr);
+        });
+      }
+    }
+
+    // --- FORM INPUT LOG PELANGGARAN / PENGURANGAN ---
+    function showInputForm(type) {
+      appState.currentActiveFormType = type;
+      document.getElementById("formContainer").classList.remove("hidden");
+
+      const selectRule = document.getElementById("inputKodeAturan");
+      const formTitle = document.getElementById("formTitle");
+
+      selectRule.innerHTML = "";
+
+      if (type === "pelanggaran") {
+        formTitle.innerHTML = `<i class="fa-solid fa-plus-circle text-rose-600"></i> Catat Pelanggaran Baru`;
+        document.getElementById("formRulesSelection").classList.remove("hidden");
+        document.getElementById("formManualScore").classList.add("hidden");
+
+        const placeholderOpt = document.createElement("option");
+        placeholderOpt.value = "";
+        placeholderOpt.textContent = "-- Pilih Langsung Melalui Menu Dropdown --";
+        selectRule.appendChild(placeholderOpt);
+
+        appState.rules.forEach(rule => {
+          const opt = document.createElement("option");
+          opt.value = rule.kode;
+          opt.textContent = `[Poin ${rule.skor}] ${rule.kode} - ${rule.uraian.substring(0, 55)}...`;
+          selectRule.appendChild(opt);
+        });
+        
+        liveFilterRules(); // Trigger inisialisasi box sugesti
+      } else {
+        // Guard: Guru Piket dilarang mengakses form pengurangan
+        if (!appState.user || appState.user.role === "Guru Piket") {
+          showToast("Akses Ditolak! Anda tidak memiliki wewenang mengurangi poin.", "error");
+          cancelInputForm();
+          return;
+        }
+
+        formTitle.innerHTML = `<i class="fa-solid fa-circle-minus text-emerald-600"></i> Pengurangan Poin (Aksi Positif / Pembinaan)`;
+        document.getElementById("formRulesSelection").classList.add("hidden");
+        document.getElementById("formManualScore").classList.remove("hidden");
+      }
+    }
+
+    // --- FITUR FILTER PENCARIAN ATURAN (Saran Otomatis) ---
+    function liveFilterRules() {
+      const query = document.getElementById("ruleSearchInput").value.toLowerCase();
+      const suggestBox = document.getElementById("ruleSuggestBox");
+      suggestBox.innerHTML = "";
+
+      const filtered = appState.rules.filter(rule => 
+        rule.kode.toLowerCase().includes(query) || 
+        rule.uraian.toLowerCase().includes(query)
+      );
+
+      if (filtered.length === 0) {
+        suggestBox.innerHTML = `<div class="p-3 text-slate-400 italic text-center">Aturan tidak ditemukan...</div>`;
+      } else {
+        filtered.forEach(rule => {
+          const item = document.createElement("div");
+          item.className = "p-2.5 hover:bg-indigo-50 cursor-pointer border-b border-slate-100 last:border-b-0 flex justify-between items-center transition";
+          item.onclick = () => selectRuleFromSuggestion(rule);
+          item.innerHTML = `
+            <div class="pr-2 text-left">
+              <span class="font-bold text-indigo-600 font-mono">[${rule.kode}]</span>
+              <span class="text-slate-600 ml-1 font-semibold">${rule.uraian}</span>
+            </div>
+            <span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded font-black whitespace-nowrap">${rule.skor} Poin</span>
+          `;
+          suggestBox.appendChild(item);
+        });
+      }
+      suggestBox.classList.remove("hidden");
+    }
+
+    function selectRuleFromSuggestion(rule) {
+      document.getElementById("inputKodeAturan").value = rule.kode;
+      document.getElementById("ruleSearchInput").value = `[${rule.kode}] ${rule.uraian}`;
+      document.getElementById("ruleSuggestBox").classList.add("hidden");
+    }
+
+    function onRuleSelected() {
+      const kode = document.getElementById("inputKodeAturan").value;
+      if (!kode) {
+        document.getElementById("ruleSearchInput").value = "";
+        return;
+      }
+      const rule = appState.rules.find(r => r.kode === kode);
+      if (rule) {
+        document.getElementById("ruleSearchInput").value = `[${rule.kode}] ${rule.uraian}`;
+      }
+    }
+
+    function cancelInputForm() {
+      document.getElementById("formContainer").classList.add("hidden");
+      document.getElementById("inputCatatan").value = "";
+      document.getElementById("ruleSearchInput").value = "";
+    }
+
+    function saveLogEntry() {
+      if (!appState.user) {
+        showToast("Anda harus login untuk melakukan aksi ini!", "error");
+        return;
+      }
+
+      const nisn = appState.selectedStudentNisn;
+      const type = appState.currentActiveFormType;
+      const notes = document.getElementById("inputCatatan").value;
+      
+      let kode = "";
+      let skor = 0;
+
+      if (type === "pelanggaran") {
+        kode = document.getElementById("inputKodeAturan").value;
+        if (!kode) {
+          showToast("Silakan cari atau pilih jenis pelanggaran terlebih dahulu!", "error");
+          return;
+        }
+        const rule = appState.rules.find(r => r.kode === kode);
+        skor = rule ? rule.skor : 0;
+      } else {
+        // Guard: Hak pengurangan poin dibatasi ketat
+        if (appState.user.role === "Guru Piket") {
+          showToast("Akses Ditolak! Peran Guru Piket tidak diizinkan melakukan pembinaan skor.", "error");
+          return;
+        }
+        kode = "REHAB_BK";
+        skor = -Math.abs(parseInt(document.getElementById("inputManualSkor").value) || 0);
+      }
+
+      if (skor === 0) {
+        showToast("Skor tidak boleh bernilai nol!", "error");
+        return;
+      }
+
+      const payload = {
+        action: "addLog",
+        nisn: nisn,
+        kode: kode,
+        skor: skor,
+        semester: appState.settings.semester,
+        tahunAjaran: appState.settings.tahunAjaran,
+        pencatat: appState.user.nama,
+        keterangan: notes
+      };
+
+      if (appState.isOffline) {
+        appState.logs.push({
+          timestamp: new Date().toISOString(),
+          ...payload
+        });
+        showToast("Log berhasil disimpan (Lokal)!", "success");
+        onLogSavedSuccess(nisn);
+      } else {
+        showToast("Menyimpan ke Google Sheets...", "info");
+        fetch(appState.gasUrl, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "success") {
+            appState.logs.push({
+              timestamp: new Date().toISOString(),
+              ...payload
+            });
+            showToast("Log berhasil disinkronkan ke Google Sheets!", "success");
+            onLogSavedSuccess(nisn);
+          } else {
+            showToast("Gagal menyimpan ke server: " + data.message, "error");
+          }
+        })
+        .catch(err => {
+          showToast("Koneksi gagal, tidak dapat menyimpan data.", "error");
+        });
+      }
+    }
+
+    function onLogSavedSuccess(nisn) {
+      cancelInputForm();
+      calculateMetrics();
+      renderDashboardTables();
+      renderCharts();
+      renderStudentLogs(nisn);
+      
+      const newScore = getStudentActiveScore(nisn);
+      document.getElementById("detSkorPoin").textContent = newScore;
+      document.getElementById("detStatusSanksi").textContent = getSanksiStatus(newScore);
+      
+      renderStudentsGrid();
+    }
+
+    // --- PRINT RAPOR ---
+    function printStudentReport() {
+      // Guard: Pastikan hanya pengguna login yang bisa mencetak rapor
+      if (!appState.user) {
+        showToast("Cetak Rapor hanya diperuntukkan bagi Guru / Wali Kelas terdaftar.", "error");
+        return;
+      }
+
+      const nisn = appState.selectedStudentNisn;
+      const student = appState.students.find(s => s.nisn === nisn);
+      if (!student) return;
+
+      const score = getStudentActiveScore(nisn);
+      const status = getSanksiStatus(score);
+
+      document.getElementById("printNama").textContent = student.nama;
+      document.getElementById("printNISN").textContent = student.nisn;
+      document.getElementById("printKelas").textContent = student.kelas;
+      document.getElementById("printWali").textContent = student.waliKelas;
+      document.getElementById("printTtdWali").textContent = student.waliKelas;
+      document.getElementById("printTotalSkor").textContent = score;
+      document.getElementById("printStatus").textContent = status;
+      document.getElementById("printPeriode").textContent = `${appState.settings.semester} TA ${appState.settings.tahunAjaran}`;
+      document.getElementById("printTanggalSekarang").textContent = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+      const printTbl = document.getElementById("printTblLogs");
+      printTbl.innerHTML = "";
+
+      const studentLogs = appState.logs.filter(log => 
+        log.nisn === nisn && 
+        log.semester === appState.settings.semester && 
+        log.tahunAjaran === appState.settings.tahunAjaran
+      ).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+      if (studentLogs.length === 0) {
+        printTbl.innerHTML = `<tr><td colspan="5" class="p-3 text-center text-slate-400">Tidak ada catatan pelanggaran. Siswa berkelakuan baik.</td></tr>`;
+      } else {
+        studentLogs.forEach(log => {
+          const isReduction = log.skor < 0;
+          const scoreText = isReduction ? log.skor : `+${log.skor}`;
+          const ruleDesc = log.kode.includes("REHAB") ? "Pembinaan / Pengurangan Poin" : (appState.rules.find(r => r.kode === log.kode)?.uraian || log.kode);
+          const dateFormatted = new Date(log.timestamp).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+
+          const tr = document.createElement("tr");
+          tr.className = "border-b border-slate-300";
+          tr.innerHTML = `
+            <td class="p-2 border-r border-slate-300 font-mono text-[11px]">${dateFormatted}</td>
+            <td class="p-2 border-r border-slate-300 font-bold">${ruleDesc}</td>
+            <td class="p-2 border-r border-slate-300 text-center font-extrabold ${isReduction ? 'text-emerald-700' : 'text-red-700'}">${scoreText}</td>
+            <td class="p-2 border-r border-slate-300 text-[10px]">${log.pencatat}</td>
+            <td class="p-2 text-[10px] italic">${log.keterangan || "-"}</td>
+          `;
+          printTbl.appendChild(tr);
+        });
+      }
+
+      window.print();
+    }
+
+    // --- MANAJEMEN LOGIN ---
+    function openLoginModal() {
+      document.getElementById("loginModal").classList.remove("hidden");
+    }
+
+    function closeLoginModal() {
+      document.getElementById("loginModal").classList.add("hidden");
+    }
+
+    function quickLogin(role) {
+      let email = "wahyu@smayo.sch.id";
+      let nama = "Drs. Wahyu Saputra";
+
+      if (role === "Admin") {
+        email = "admin@smayo.sch.id";
+        nama = "Pratama Admin, S.Kom";
+      } else if (role === "Tim Tatib") {
+        email = "tatib@smayo.sch.id";
+        nama = "Siti Rahmawati, S.Psi";
+      }
+
+      appState.user = { nama, email, role };
+      localStorage.setItem("SITATIB_USER", JSON.stringify(appState.user));
+      updateUserUI();
+      closeLoginModal();
+      showToast(`Berhasil Masuk sebagai ${role}!`, "success");
+    }
+
+    function handleLoginSubmit() {
+      const email = document.getElementById("loginEmail").value;
+      if (!email) return;
+
+      if (appState.isOffline) {
+        if (email.includes("admin")) {
+          quickLogin("Admin");
+        } else if (email.includes("tatib") || email.includes("bk")) {
+          quickLogin("Tim Tatib");
+        } else {
+          quickLogin("Guru Piket");
+        }
+      } else {
+        showToast("Memverifikasi email...", "info");
+        fetch(appState.gasUrl, {
+          method: "POST",
+          body: JSON.stringify({ action: "auth", email: email })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "success") {
+            appState.user = data.user;
+            localStorage.setItem("SITATIB_USER", JSON.stringify(appState.user));
+            updateUserUI();
+            closeLoginModal();
+            showToast(`Selamat datang, ${data.user.nama}!`, "success");
+          } else {
+            showToast("Email tidak terdaftar atau tidak aktif.", "error");
+          }
+        })
+        .catch(err => {
+          showToast("Gagal terhubung untuk validasi login.", "error");
+        });
+      }
+    }
+
+    function logout() {
+      appState.user = null;
+      localStorage.removeItem("SITATIB_USER");
+      updateUserUI();
+      switchTab('dashboard'); // Paksa navigasi kembali ke halaman publik Beranda
+      showToast("Berhasil Keluar dari Sistem. Kembali ke mode publik.", "info");
+    }
+
+    function updateUserUI() {
+      const userProfile = document.getElementById("userProfile");
+      const loginTrigger = document.getElementById("loginTrigger");
+      const btnAdmin = document.getElementById("btn-admin");
+      const btnSiswa = document.getElementById("btn-siswa");
+
+      if (appState.user) {
+        userProfile.classList.remove("hidden");
+        loginTrigger.classList.add("hidden");
+        document.getElementById("userName").textContent = appState.user.nama;
+        document.getElementById("userRole").textContent = appState.user.role;
+
+        // "Database Siswa" hanya aktif jika login (Guru Piket, Tim Tatib, Admin)
+        btnSiswa.classList.remove("hidden");
+
+        // "Pengaturan & Admin" hanya aktif untuk role "Admin"
+        if (appState.user.role === "Admin") {
+          btnAdmin.classList.remove("hidden");
+        } else {
+          btnAdmin.classList.add("hidden");
+          if (appState.activeTab === "admin") switchTab("dashboard");
+        }
+      } else {
+        userProfile.classList.add("hidden");
+        loginTrigger.classList.remove("hidden");
+        btnAdmin.classList.add("hidden");
+        btnSiswa.classList.add("hidden");
+        
+        // Kembalikan tab jika berada di area terlarang untuk guest
+        if (appState.activeTab === "admin" || appState.activeTab === "siswa") {
+          switchTab("dashboard");
+        }
+      }
+    }
+
+    // --- ADMIN SETTINGS & CONNECTIONS WITH SECURITY ROLES GUARD ---
+    function saveGasConnection() {
+      if (!appState.user || appState.user.role !== "Admin") {
+        showToast("Tindakan diblokir! Hanya Administrator yang dapat merubah url server database.", "error");
+        return;
+      }
+
+      const url = document.getElementById("gasUrlInput").value.trim();
+      if (url === "") {
+        appState.gasUrl = "";
+        appState.isOffline = true;
+        localStorage.removeItem("SITATIB_GAS_URL");
+        showToast("Sistem beralih ke Mode Demo (Offline).", "info");
+      } else {
+        appState.gasUrl = url;
+        appState.isOffline = false;
+        localStorage.setItem("SITATIB_GAS_URL", url);
+        showToast("Tautan GAS disimpan! Mencoba sinkronisasi...", "info");
+        loadData();
+      }
+      updateConnectionUI();
+    }
+
+    function updateConnectionUI() {
+      const statusEl = document.getElementById("connectionStatus");
+      if (appState.isOffline) {
+        statusEl.className = "flex items-center space-x-2 text-xs bg-amber-500/20 text-amber-200 px-3 py-1.5 rounded-full border border-amber-500/30";
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span><span>Mode Demo (Offline)</span>`;
+      } else {
+        statusEl.className = "flex items-center space-x-2 text-xs bg-emerald-500/20 text-emerald-200 px-3 py-1.5 rounded-full border border-emerald-500/30";
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>Terkoneksi ke Spreadsheet</span>`;
+      }
+    }
+
+    function saveAdminSettings() {
+      if (!appState.user || appState.user.role !== "Admin") {
+        showToast("Tindakan diblokir! Perubahan periode hanya dapat dilakukan oleh Admin.", "error");
+        return;
+      }
+
+      const semester = document.getElementById("adminSemester").value;
+      const tahunAjaran = document.getElementById("adminTahunAjaran").value;
+
+      const payload = {
+        action: "updateSettings",
+        semester: semester,
+        tahunAjaran: tahunAjaran
+      };
+
+      if (appState.isOffline) {
+        appState.settings = { semester, tahunAjaran };
+        showToast("Pengaturan Periode disimpan lokal!", "success");
+        refreshUI();
+      } else {
+        showToast("Memperbarui setelan di Google Sheets...", "info");
+        fetch(appState.gasUrl, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "success") {
+            appState.settings = { semester, tahunAjaran };
+            showToast("Sukses memperbarui periode aktif di server!", "success");
+            refreshUI();
+          } else {
+            showToast("Gagal memperbarui pengaturan: " + data.message, "error");
+          }
+        })
+        .catch(() => showToast("Koneksi gagal saat menyimpan setelan.", "error"));
+      }
+    }
+
+    function handleAddGuru(e) {
+      e.preventDefault();
+      if (!appState.user || appState.user.role !== "Admin") {
+        showToast("Tindakan diblokir! Hanya Administrator yang dapat mendaftarkan guru baru.", "error");
+        return;
+      }
+
+      const nama = document.getElementById("addGuruNama").value;
+      const email = document.getElementById("addGuruEmail").value;
+      const role = document.getElementById("addGuruRole").value;
+
+      const payload = {
+        action: "addGuru",
+        nama: nama,
+        email: email,
+        role: role
+      };
+
+      if (appState.isOffline) {
+        showToast("Guru didaftarkan secara lokal (Simulasi).", "success");
+        document.getElementById("formAddGuru").reset();
+      } else {
+        showToast("Menyimpan Guru ke Google Sheets...", "info");
+        fetch(appState.gasUrl, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "success") {
+            showToast("Guru baru berhasil terdaftar di Spreadsheet!", "success");
+            document.getElementById("formAddGuru").reset();
+          } else {
+            showToast("Gagal menyimpan guru: " + data.message, "error");
+          }
+        })
+        .catch(() => showToast("Koneksi gagal menyimpan data guru.", "error"));
+      }
+    }
+
+    // --- CONFIRMATION HANDLER (No confirm() popups allowed!) ---
+    function showCustomConfirm(title, message, onProceed) {
+      document.getElementById("confirmTitle").textContent = title;
+      document.getElementById("confirmMessage").textContent = message;
+      
+      const modal = document.getElementById("customConfirmModal");
+      modal.classList.remove("hidden");
+      
+      const btnProceed = document.getElementById("btnConfirmProceed");
+      const btnCancel = document.getElementById("btnConfirmCancel");
+      
+      btnProceed.onclick = function() {
+        modal.classList.add("hidden");
+        onProceed();
+      }
+      
+      btnCancel.onclick = function() {
+        modal.classList.add("hidden");
+      }
+    }
+
+    function triggerMassalReset() {
+      if (!appState.user || appState.user.role !== "Admin") {
+        showToast("Tindakan diblokir! Penghapusan poin hanya diizinkan untuk Admin.", "error");
+        return;
+      }
+
+      showCustomConfirm(
+        "Peringatan Pemutihan Massal!",
+        "Apakah Anda yakin ingin melakukan pemutihan poin massal seluruh siswa? Semua total poin aktif siswa akan langsung kembali menjadi nol.",
+        function() {
+          // Melakukan pemutihan (Lokal)
+          appState.logs = appState.logs.filter(log => log.skor < 0); // Tetap pertahankan data pembinaan saja
+          showToast("Pemutihan massal berhasil dieksekusi!", "success");
+          refreshUI();
+        }
+      );
+    }
+
+    // --- CSV EXPORTS (Guarded for Authorized Roles) ---
+    function exportLogsToCSV() {
+      if (!appState.user || (appState.user.role !== "Admin" && appState.user.role !== "Tim Tatib")) {
+        showToast("Akses Ditolak! Anda tidak memiliki izin untuk mengunduh rekap log.", "error");
+        return;
+      }
+
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Timestamp,NISN,Kode Pelanggaran,Skor,Semester,Tahun Ajaran,Pencatat,Keterangan\n";
+
+      appState.logs.forEach(log => {
+        const row = [
+          log.timestamp,
+          `"${log.nisn}"`,
+          `"${log.kode}"`,
+          log.skor,
+          `"${log.semester}"`,
+          `"${log.tahunAjaran}"`,
+          `"${log.pencatat}"`,
+          `"${log.keterangan || ''}"`
+        ].join(",");
+        csvContent += row + "\n";
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `sitatib_log_pelanggaran_${appState.settings.tahunAjaran.replace('/','-')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function exportStudentsToCSV() {
+      if (!appState.user || (appState.user.role !== "Admin" && appState.user.role !== "Tim Tatib")) {
+        showToast("Akses Ditolak! Anda tidak memiliki izin untuk mengunduh rekap siswa.", "error");
+        return;
+      }
+
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "NISN,Nama Siswa,Kelas,Wali Kelas,No HP Ortu,Skor Poin Aktif\n";
+
+      appState.students.forEach(st => {
+        const score = getStudentActiveScore(st.nisn);
+        const row = [
+          `"${st.nisn}"`,
+          `"${st.nama}"`,
+          `"${st.kelas}"`,
+          `"${st.waliKelas}"`,
+          `"${st.hpOrangTua}"`,
+          score
+        ].join(",");
+        csvContent += row + "\n";
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `sitatib_rekap_siswa_${appState.settings.tahunAjaran.replace('/','-')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // --- TOAST NOTIFICATIONS ---
+    function showToast(message, type = "info") {
+      const toast = document.getElementById("toastBox");
+      const icon = document.getElementById("toastIcon");
+      const msg = document.getElementById("toastMsg");
+
+      msg.textContent = message;
+
+      if (type === "success") {
+        icon.className = "fa-solid fa-circle-check text-emerald-400";
+        toast.className = "fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-xl flex items-center space-x-3 text-sm border border-emerald-500/20";
+      } else if (type === "error") {
+        icon.className = "fa-solid fa-triangle-exclamation text-rose-400";
+        toast.className = "fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-xl flex items-center space-x-3 text-sm border border-rose-500/20";
+      } else {
+        icon.className = "fa-solid fa-circle-info text-blue-400";
+        toast.className = "fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-xl flex items-center space-x-3 text-sm border border-slate-800";
+      }
+
+      toast.classList.remove("hidden");
+      setTimeout(() => {
+        toast.classList.add("hidden");
+      }, 4000);
+    }
+  </script>
+</body>
+</html>
