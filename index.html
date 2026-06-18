@@ -13,6 +13,13 @@
     }
   </script>
   
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#1e3a8a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="https://i.ibb.co.com/dX64Q46/Jargon-SMAYO-jatim-1.png">
+  <link rel="manifest" href='data:application/manifest+json,{"name":"SITATIB SMAYO","short_name":"SITATIB","start_url":".","display":"standalone","background_color":"#0f172a","theme_color":"#1e3a8a","icons":[{"src":"https://i.ibb.co.com/dX64Q46/Jargon-SMAYO-jatim-1.png","sizes":"192x192","type":"image/png"}]}'>
+
   <!-- FontAwesome & Google Fonts -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -226,9 +233,9 @@
           </div>
         </div>
 
-        <!-- Siswa Dengan Poin Tertinggi (Butuh Penanganan Segera) -->
+        <!-- Siswa Dengan Poin Tertinggi (Butuh Penanganan Segera - Minimal 20 Poin) -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col dark:bg-slate-800 dark:border-slate-700">
-          <h4 class="font-bold text-slate-800 mb-4 text-rose-600 dark:text-rose-400"><i class="fa-solid fa-triangle-exclamation mr-1 animate-bounce"></i> Perlu Penanganan Segera (Poin Tertinggi)</h4>
+          <h4 class="font-bold text-slate-800 mb-4 text-rose-600 dark:text-rose-400"><i class="fa-solid fa-triangle-exclamation mr-1 animate-bounce"></i> Perlu Penanganan Segera (Poin >= 20)</h4>
           <div class="overflow-x-auto flex-grow">
             <table class="w-full text-left text-sm min-w-[500px]">
               <thead>
@@ -297,12 +304,8 @@
         </div>
         <div class="flex items-center space-x-2">
           <span class="text-xs font-bold bg-indigo-50 text-indigo-700 px-3 py-2 rounded-xl border border-indigo-100 dark:bg-slate-700 dark:text-indigo-300 dark:border-slate-600">
-            <i class="fa-solid fa-star text-amber-500 mr-1"></i>10 Teratas Seluruh Kelas
+            <i class="fa-solid fa-star text-amber-500 mr-1"></i>Poin Tertinggi Seluruh Kelas
           </span>
-          <button onclick="simulateQRScan()" class="bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-sm dark:bg-slate-700 dark:hover:bg-slate-600">
-            <i class="fa-solid fa-qrcode"></i>
-            <span>Scan Kartu Pelajar</span>
-          </button>
         </div>
       </div>
 
@@ -700,7 +703,26 @@
 
   <!-- ==================== JAVASCRIPT LOGIC ==================== -->
   <script>
-    // === KONFIGURASI DATABASE UTAMA ===
+    // PWA Service Worker Registration with Sandbox Guard
+    if ('serviceWorker' in navigator) {
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const isHttps = window.location.protocol === 'https:';
+      const isBlob = window.location.protocol.startsWith('blob');
+
+      // Hanya daftarkan Service Worker di protokol HTTPS atau Localhost yang bukan BLOB sandbox
+      if ((isHttps || isLocalhost) && !isBlob) {
+        window.addEventListener('load', () => {
+          const swUrl = new URL('sw.js', window.location.href).href;
+          navigator.serviceWorker.register(swUrl)
+            .then(reg => console.log('SITATIB PWA Service Worker Registered!'))
+            .catch(err => console.error('PWA SW Registration failed:', err));
+        });
+      } else {
+        console.warn('PWA Service Worker registration skipped: Unsupported sandbox environment/protocol (' + window.location.protocol + ')');
+      }
+    }
+
+    // === KONFIGURASI DATABASE UTAMA (HARDCODED PERMANEN) ===
     const CONFIG_GAS_URL = "https://script.google.com/macros/s/AKfycbxZLkBZGeYjlBqMzyJ74e33PW6JQtP7wDhhTuTaFLmaa3BYGlpWlZIloVg2KjwvfmFn/exec";
 
     // --- STATE MANAGER ---
@@ -710,8 +732,8 @@
       user: null, 
       settings: { semester: "Ganjil", tahunAjaran: "2026/2027" },
       rules: [],
-      students: [],
-      logs: [],
+      students: [], // Diisi dari backend
+      logs: [],     // Diisi dari backend
       activeTab: 'dashboard',
       selectedStudentNisn: null,
       currentActiveFormType: 'pelanggaran'
@@ -934,7 +956,10 @@
         recentLogsBody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-400">Tidak ada log aktivitas hari ini.</td></tr>`;
       } else {
         sortedLogs.forEach(log => {
-          const student = appState.students.find(s => s.nisn === log.nisn) || { nama: "Siswa Luar", waliKelas: "-" };
+          const student = appState.students.find(s => s.nisn === log.nisn);
+          // Jika siswa tidak ditemukan (mungkin terhapus di database siswa tapi log masih ada), abaikan rendering log tersebut agar tidak menampilkan "Siswa Luar"
+          if (!student) return;
+
           const badgeClass = log.skor < 0 ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400" : "bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-400";
           const scoreText = log.skor < 0 ? log.skor : `+${log.skor}`;
           const ruleDesc = log.kode.includes("REHAB") ? "Pembinaan" : (appState.rules.find(r => r.kode === log.kode)?.uraian || log.kode);
@@ -967,18 +992,19 @@
         });
       }
 
+      // Update Poin Tertinggi (Hanya Siswa dengan Poin >= 20)
       const topOffendersBody = document.getElementById("tblTopOffenders");
       topOffendersBody.innerHTML = "";
 
       const studentScores = appState.students.map(st => {
         return { ...st, score: getStudentActiveScore(st.nisn) };
       })
-      .filter(st => st.score > 0)
+      .filter(st => st.score >= 20) // Batasi ketat hanya menampilkan siswa berpoin 20 ke atas
       .sort((a,b) => b.score - a.score)
-      .slice(0, 5);
+      .slice(0, 10);
 
       if (studentScores.length === 0) {
-        topOffendersBody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-400">Semua siswa berkelakuan sangat baik!</td></tr>`;
+        topOffendersBody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-400">Tidak ada siswa yang mencapai batas penanganan segera (>= 20 poin).</td></tr>`;
       } else {
         studentScores.forEach(st => {
           const status = getSanksiStatus(st.score);
@@ -1162,18 +1188,42 @@
       });
     }
 
-    // --- RENDER TOP 10 STUDENTS GRID ---
+    // --- RENDER DATABASE SISWA & POIN ---
     function renderStudentsGrid() {
+      filterStudents(); // Panggil fungsi filter dinamis untuk merender daftar siswa awal
+    }
+
+    function filterStudents() {
+      const searchVal = document.getElementById("searchStudent").value.toLowerCase();
+      const classVal = document.getElementById("filterClass").value;
+
+      let filteredStudents = [];
+
+      // Perbaikan filter dinamis kelas dan pencarian
+      if (searchVal === "" && classVal === "") {
+        // Tampilkan default: 10 siswa dengan poin tertinggi dari semua kelas
+        filteredStudents = appState.students.map(st => {
+          return { ...st, score: getStudentActiveScore(st.nisn) };
+        })
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 10);
+      } else {
+        // Filter di seluruh database siswa secara global untuk menampilkan data siswa secara akurat sesuai kelas
+        filteredStudents = appState.students.map(st => {
+          return { ...st, score: getStudentActiveScore(st.nisn) };
+        })
+        .filter(st => {
+          const matchesSearch = st.nama.toLowerCase().includes(searchVal) || st.nisn.includes(searchVal);
+          const matchesClass = classVal === "" || st.kelas === classVal;
+          return matchesSearch && matchesClass;
+        })
+        .sort((a, b) => b.score - a.score);
+      }
+
       const grid = document.getElementById("studentGrid");
       grid.innerHTML = "";
 
-      const top10Students = appState.students.map(st => {
-        return { ...st, score: getStudentActiveScore(st.nisn) };
-      })
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10);
-
-      top10Students.forEach(st => {
+      filteredStudents.forEach(st => {
         const status = getSanksiStatus(st.score);
         
         let cardColor = "border-slate-200 hover:border-blue-400 dark:border-slate-700";
@@ -1218,93 +1268,6 @@
         `;
         grid.appendChild(div);
       });
-    }
-
-    function filterStudents() {
-      const searchVal = document.getElementById("searchStudent").value.toLowerCase();
-      const classVal = document.getElementById("filterClass").value;
-
-      const top10Students = appState.students.map(st => {
-        return { ...st, score: getStudentActiveScore(st.nisn) };
-      })
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10);
-
-      const filtered = top10Students.filter(st => {
-        const matchesSearch = st.nama.toLowerCase().includes(searchVal) || st.nisn.includes(searchVal);
-        const matchesClass = classVal === "" || st.kelas === classVal;
-        return matchesSearch && matchesClass;
-      });
-
-      const grid = document.getElementById("studentGrid");
-      grid.innerHTML = "";
-
-      filtered.forEach(st => {
-        const status = getSanksiStatus(st.score);
-        
-        let cardColor = "border-slate-200 hover:border-blue-400 dark:border-slate-700";
-        let scoreBadgeColor = "bg-slate-100 text-slate-700";
-        let sanksiBadgeColor = "bg-slate-100 text-slate-500";
-
-        if (st.score >= 75) {
-          cardColor = "border-red-300 hover:border-red-500 bg-red-50/20 dark:border-red-900/40";
-          scoreBadgeColor = "bg-red-600 text-white shadow-sm";
-          sanksiBadgeColor = "bg-red-100 text-red-700 border border-red-200";
-        } else if (st.score >= 25) {
-          cardColor = "border-amber-300 hover:border-amber-500 bg-amber-50/10 dark:border-amber-900/40";
-          scoreBadgeColor = "bg-amber-500 text-white shadow-sm";
-          sanksiBadgeColor = "bg-amber-100 text-amber-700 border border-amber-200";
-        } else if (st.score > 0) {
-          cardColor = "border-blue-200 hover:border-blue-400 dark:border-slate-700";
-          scoreBadgeColor = "bg-blue-600 text-white shadow-sm";
-          sanksiBadgeColor = "bg-blue-100 text-blue-700 border border-blue-200";
-        }
-
-        const div = document.createElement("div");
-        div.className = `bg-white p-5 rounded-2xl border-2 ${cardColor} transition shadow-sm cursor-pointer relative overflow-hidden group dark:bg-slate-800`;
-        div.onclick = () => openStudentDetail(st.nisn);
-        div.innerHTML = `
-          <div class="absolute right-0 top-0 w-24 h-24 bg-indigo-50 dark:bg-indigo-950/20 rounded-bl-full -z-10 group-hover:scale-110 transition-transform"></div>
-          <div class="flex justify-between items-start mb-3">
-            <div>
-              <h4 class="font-bold text-slate-800 text-sm tracking-tight dark:text-white">${st.nama}</h4>
-              <p class="text-[11px] text-slate-400 font-mono mt-0.5">NISN: ${st.nisn}</p>
-            </div>
-            <span class="px-3 py-1 rounded-xl text-sm font-black ${scoreBadgeColor}">${st.score}</span>
-          </div>
-          <div class="flex items-center justify-between mt-6 pt-3 border-t border-slate-100 dark:border-slate-700 text-xs">
-            <div>
-              <span class="text-slate-400">Kelas:</span>
-              <span class="font-bold text-slate-700 dark:text-slate-200 ml-1">${st.kelas}</span>
-            </div>
-            <span class="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide ${sanksiBadgeColor}">${status}</span>
-          </div>
-        `;
-        grid.appendChild(div);
-      });
-    }
-
-    function simulateQRScan() {
-      if (!appState.user) {
-        showToast("Hanya Guru terdaftar yang dapat memindai kartu pelajar siswa.", "error");
-        return;
-      }
-
-      const top10Students = appState.students.map(st => {
-        return { ...st, score: getStudentActiveScore(st.nisn) };
-      })
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10);
-
-      if (top10Students.length === 0) {
-        showToast("Database siswa kosong. Tidak dapat melakukan simulasi scan.", "error");
-        return;
-      }
-
-      const index = Math.floor(Math.random() * top10Students.length);
-      const student = top10Students[index];
-      showToast(`Scan QR Berhasil! Membuka data ${student.nama}`, "success");
-      openStudentDetail(student.nisn);
     }
 
     // --- DETAIL SISWA MODAL ---
